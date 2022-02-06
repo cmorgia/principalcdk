@@ -5,7 +5,7 @@ cd $PARENT_DIR
 
 export CICD_ID=$(jq -r .context.cicd.account cdk.json)
 # change below with your profile name
-export AWS_PROFILE=default
+export AWS_PROFILE=$(jq -r .context.cicd.profile <cdk.json)
 export AWS_DEFAULT_REGION=$(jq -r .context.common.primaryRegion cdk.json)
 
 export S3OBJURL=$(aws cloudformation describe-stacks --stack-name PipelineStack --query "Stacks[0].Outputs[?OutputKey=='packageTarget'].OutputValue" --output text)
