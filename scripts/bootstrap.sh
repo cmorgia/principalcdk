@@ -14,7 +14,7 @@ export TEST_PROFILE=$(jq -r .context.test.profile <cdk.json)
 export PROD_PROFILE=$(jq -r .context.prod.profile <cdk.json)
 
 export PRIMARY_REGION=$(jq -r .context.common.primaryRegion <cdk.json)
-export SECONDARY_REGION=$(jq -r .context.common.primaryRegion <cdk.json)
+export SECONDARY_REGION=$(jq -r .context.common.secondaryRegion <cdk.json)
 
 # bootstrap for CDK pipeline only, main region
 cdk bootstrap --profile $CICD_PROFILE --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess aws://$CICD_ACCOUNT_ID/$PRIMARY_REGION
