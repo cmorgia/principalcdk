@@ -8,42 +8,36 @@ It includes the new Application Load Balancer with autoscaling group and scaling
 
 It also implements the static file serving separatation through CloudFront and an S3 bucket, including cross-region deployment of digital certificates for CloudFront.
 
-The CDK pipeline implements cross-account deployment with automated roles creation and assume, using a plugin.
-
-Since the solutions is based on CloudFront, which needs to have the SSL certificates in the North Virginia region, I implemented a cross-region cross-account deployment scheme.
-
-Basically, there's a first bootstrapping sequence, where we need to create the subdomain public zones and the SSL certificates for the CloudFront distribution, for the test and production environment.
-
-![Regions layout](regions.png "Regions layout")
+The CDK pipeline implements cross-account deployment with automated roles creation and assume.
 
 ## Instructions
 
-The current setup is based on three accounts: **cicd**, **test** and **prod** and a registered parent DNS domain. The solution has been tested with Route53 registered domain.
+The current setup is based on four accounts: **cicd**, **dev**, **test** and **prod**.
 
 These accounts should be configured as AWS CLI profiles.
 
 Make sure you have installed AWS CLI and CDK toolkit.
 
-Configure **cdk.json** by replacing the entries *cicdAccount*, *testAccount* and *prodAccount* with the respective account IDs.
-Also make sure to reflect the parent domain name in the entry *parentDomain*.
+Configure **cdk.json** by replacing the entry *account* in the sections  *cicd*, *dev*, *test* and *prod* with the respective account IDs and the entry *profile* with the AWS CLI named profiles.
+Complete the configuration by editing the fields *primaryRegion* and *secondaryRegion* with your selected primary and secondary deployment regions.
 
 ## Bootstrapping
 
-Before bootstrapping using the provided script **botstrap.sh**, edit the script and change the AWS CLI profile names with the ones corresponding to your set up.
-The script performs all the necessary CDK bootstrapping in all the configured accounts and regions, then proceeds to create the required resources:
+To deploy the solution, first you need to make sure all the target environments are properly bootstrapped for use with AWS CDK.
 
-- public hosted zones for test and prod, with (cross account) zone delegation records
-- SSL certificates
-- CDK lookup roles
+The full documentation is available here --> https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html
 
-To finish, the script deploys the main CDK pipeline. Take note of the output value, being the reference to the CodeCommit repository you will need to commit the code against.
+Let's assume your AWS CLI environment is configured with four named profiles: *cicd*, *dev*, *test* and *prod*.
+
+Assuming you properly configured the **cdk.json** file as explained in the previous section, you only need to execute the command:
+
+`<path to workspace>/scripts/bootstrap.sh`
+
+which will take care of bootstrapping all the environments and deploy the CDK pipeline for the solution.
 
 ## Deploy the solution
 
-Once all the environments are bootstrapped and the pipeline activated, you need to deploy the infrastructure code by committing it to the CodeCommit repo:
+Once all the environments are bootstrapped and the pipeline activated, you need to deploy the infrastructure code by upload the code to the S3 bucket that is monitored by the CDK pipeline.
+This can easily be done by executing the script:
 
-`git remote remove codecommit`
-
-`git remote add codecommit <URL from pipeline stack>`
-
-`git push codecommit`
+`<path to workspace>/scripts/deploy.sh`
