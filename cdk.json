@@ -1,0 +1,53 @@
+{
+  "app": "npx ts-node --prefer-ts-exts bin/cdk.ts",
+  "watch": {
+    "include": [
+      "**"
+    ],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "**/*.d.ts",
+      "**/*.js",
+      "tsconfig.json",
+      "package*.json",
+      "yarn.lock",
+      "node_modules",
+      "test"
+    ]
+  },
+  "context": {
+    "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
+    "@aws-cdk/core:stackRelativeExports": true,
+    "@aws-cdk/aws-rds:lowercaseDbIdentifier": true,
+    "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+    "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true,
+    "@aws-cdk-containers/ecs-service-extensions:enableDefaultLogDriver": true,
+    "@aws-cdk/core:target-partitions": [
+      "aws",
+      "aws-cn"
+    ],
+    "common": {
+      "primaryRegion": "eu-central-1",
+      "secondaryRegion": "eu-west-3"
+    },
+    "cicd": {
+      "account": "052623131611"
+    },
+    "dev": {
+      "account": "693196418513",
+      "primaryCidr": "10.0.0.0/24",
+      "secondaryCidr": "10.1.0.0/24"
+    },
+    "test": {
+      "account": "673756903570",
+      "primaryCidr": "10.2.0.0/24",
+      "secondaryCidr": "10.3.0.0/24"
+    },
+    "prod": {
+      "account": "536995177148",
+      "primaryCidr": "10.4.0.0/24",
+      "secondaryCidr": "10.5.0.0/24"
+    }
+  }
+}
