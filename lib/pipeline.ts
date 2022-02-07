@@ -20,9 +20,10 @@ export class PipelineStack extends Stack {
             crossAccountKeys: true,
             synth: new ShellStep('Synth',{
                 input: CodePipelineSource.s3(sourceBucket,packageObjectName),
-                installCommands: [ 'npm i -g npm'],
+                installCommands: [ 'npm i -g npm' ],
                 commands: [
-                    'npm ci', 
+                    'npm ci',
+                    './scripts/fix.sh',
                     'npx cdk synth'
                 ]
             })
