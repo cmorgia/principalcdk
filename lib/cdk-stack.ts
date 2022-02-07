@@ -5,15 +5,40 @@ import { AmazonLinuxImage, CloudFormationInit, InitCommand, InitConfig, InitFile
 import { CfnGlobalReplicationGroup, CfnReplicationGroup, CfnSubnetGroup } from 'aws-cdk-lib/aws-elasticache';
 import { ApplicationListenerRule, ApplicationLoadBalancer, ApplicationProtocol, ApplicationTargetGroup, ListenerAction, ListenerCondition, TargetType } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { AuroraPostgresEngineVersion, DatabaseClusterEngine, ParameterGroup } from 'aws-cdk-lib/aws-rds';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { GolbalAuroraRDSMaster as GlobalAuroraMaster, GolbalAuroraRDSSlaveInfra as GlobalAuroraSlave } from 'cdk-aurora-globaldatabase';
 import { Construct } from 'constructs';
 import { Config } from './config';
+import { SSMParameterReader } from './reader';
 import { ReplicatedBucket } from './replicated';
 export class AppStack extends Stack {
   public bucket: Bucket;
   public alb: ApplicationLoadBalancer;
+  private redisGlobalPrefix:{[key:string]:string}={
+    "us-east-2":"fpkhr",
+    "us-east-1":"ldgnf",
+    "us-west-1":"virxk",
+    "us-west-2":"sgaui",
+    "ca-central-1":"bxodz",
+    "ap-south-1":"erpgt",
+    "ap-northeast-1":"quwsw",
+    "ap-northeast-2":"lfqnh",
+    "ap-northeast-3":"nlapn",
+    "ap-southeast-1":"vlqxn",
+    "ap-southeast-2":"vbgxd",
+    "eu-central-1":"iudkw",
+    "eu-west-1":"gxeiz",
+    "eu-west-2":"okuqm",
+    "eu-west-3":"fgjhi",
+    "sa-east-1":"juxlw",
+    "cn-north-1":"emvgo",
+    "cn-northwest-1":"ckbem",
+    "ap-east-1":"knjmp",
+    "us-gov-west-1":"sgwui",
+  };
 
   protected fixedLengthRandom(len: number): string {
     const rand = Math.floor(Math.random() * (Math.pow(10, len) + 1));
@@ -134,7 +159,8 @@ export class AppStack extends Stack {
 
     bucket.grantRead(oai);
 
-    this.setupRedis(vpc,config.primary,config.secondaryRegion);
+    //this.setupRedis(vpc, config.primary, config.secondaryRegion);
+    this.setupAurora(vpc, config.primary, config.secondaryRegion);
 
     new StringParameter(this, `lb-${Stack.of(this).region}`, {
       parameterName: `lb-${Stack.of(this).region}`,
@@ -177,7 +203,7 @@ export class AppStack extends Stack {
       port: 6379,
       securityGroupIds: [secGroup.securityGroupId],
       snapshotRetentionLimit: 7,
-      globalReplicationGroupId: 'iudkw-globalredis'
+      globalReplicationGroupId: `${this.redisGlobalPrefix[Stack.of(this).region]}-globalredis`
     });
     redisReplGroup._addResourceDependency(subnetGroup);
 
@@ -191,6 +217,58 @@ export class AppStack extends Stack {
         regionalConfigurations: [{ replicationGroupId: 'secondary', replicationGroupRegion: secondaryRegion }]
       });
       globalReplicationGroup.addDependsOn(redisReplGroup);
+    }
+  }
+
+  private setupAurora(vpc: Vpc, isPrimary: boolean, secondaryRegion: string) {
+    if (isPrimary) {
+      const dbSubnetName = new SSMParameterReader(this,'dbSubnetName',{
+        parameterName: `aurora-secondary-subnet-${secondaryRegion}`, 
+        region: secondaryRegion
+      }).getParameterValue();
+
+      const v17 = DatabaseClusterEngine.auroraPostgres({
+        version: AuroraPostgresEngineVersion.VER_11_7
+      });
+
+      const primary = new GlobalAuroraMaster(this, 'primaryAurora', {
+        vpc: vpc,
+        engineVersion: v17,
+        rdsPassword: '1qidhqwwu3',
+        dbClusterpPG: new ParameterGroup(this, 'dbClusterparametergroup', {
+          engine: v17,
+          parameters: {
+            'rds.force_ssl': '1',
+            'rds.log_retention_period': '10080',
+            'auto_explain.log_min_duration': '5000',
+            'auto_explain.log_verbose': '1',
+            'timezone': 'UTC+8',
+            'shared_preload_libraries': 'auto_explain,pg_stat_statements,pg_hint_plan,pgaudit',
+            'log_connections': '1',
+            'log_statement': 'ddl',
+            'log_disconnections': '1',
+            'log_lock_waits': '1',
+            'log_min_duration_statement': '5000',
+            'log_rotation_age': '1440',
+            'log_rotation_size': '102400',
+            'random_page_cost': '1',
+            'track_activity_query_size': '16384',
+            'idle_in_transaction_session_timeout': '7200000',
+          },
+        }),
+        
+      });
+
+      primary.addRegionalCluster(this,'auroraRegional',{
+        region: secondaryRegion,
+        dbSubnetGroupName: dbSubnetName
+      });
+    } else {
+      const secondary = new GlobalAuroraSlave(this, 'secondaryAurora', { vpc: vpc });
+      new StringParameter(this, `aurora-secondary-subnet-${Stack.of(this).region}`, {
+        parameterName: `aurora-secondary-subnet-${Stack.of(this).region}`,
+        stringValue: secondary.dbSubnetGroup.dbSubnetGroupName || "",
+      });
     }
   }
 }
