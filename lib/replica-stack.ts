@@ -31,11 +31,11 @@ export class ReplicaStack extends cdk.Stack {
         origin: new OriginGroup({
           primaryOrigin: new HttpOrigin(primaryLBDNS, { 
             protocolPolicy: OriginProtocolPolicy.HTTP_ONLY, 
-            customHeaders: { "Secret-Customer-Header": primarySecretHeader }
+            customHeaders: { "Secret-Custom-Header": primarySecretHeader }
           }),
           fallbackOrigin: new HttpOrigin(secondaryLBDNS, { 
             protocolPolicy: OriginProtocolPolicy.HTTP_ONLY, 
-            customHeaders: { "Secret-Customer-Header": secondarySecretHeader }
+            customHeaders: { "Secret-Custom-Header": secondarySecretHeader }
           }),
         })
       },
