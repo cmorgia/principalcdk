@@ -41,3 +41,8 @@ Once all the environments are bootstrapped and the pipeline activated, you need 
 This can easily be done by executing the script:
 
 `<path to workspace>/scripts/deploy.sh`
+
+## Test the solution
+
+Just execute the script `<path to workspace>/scripts/deploy.sh` to compute the static (S3 served) and dynamic (ALB served) URL.
+Navigate to the respective URLs to validate.
