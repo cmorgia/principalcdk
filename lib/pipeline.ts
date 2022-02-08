@@ -1,8 +1,9 @@
 import { CfnOutput, Stack, StackProps, Stage, StageProps } from "aws-cdk-lib";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { AddStageOpts, CodePipeline, CodePipelineSource, ManualApprovalStep, ShellStep } from "aws-cdk-lib/pipelines";
 import { Construct } from "constructs";
-import { AppStack } from "./cdk-stack";
+import { AppStack, RedisSecondaryStack } from "./cdk-stack";
 import { Config, EnvConfig, ReplicaConfig } from "./config";
 import { ReplicaStack } from "./replica-stack";
 
@@ -55,6 +56,10 @@ export class PipelineStack extends Stack {
                 env: { account: envConfig.account, region: envConfig.primaryRegion }
             }));
     
+            pipeline.addStage(new RedisSecondaryStage(this,`${envName}RedisSecondary`, envConfig.primaryRegion, { 
+                env: { account: envConfig.account, region: envConfig.secondaryRegion }
+            }));
+
             const replicaConfig:ReplicaConfig = {
                 primaryRegion: secondaryConfig.primaryRegion,
                 secondaryRegion: secondaryConfig.secondaryRegion
@@ -93,5 +98,15 @@ class ReplicationStage extends Stage {
         const primary = new ReplicaStack(this, 'ReplicaStack', {
             env: { account: props?.env?.account, region: props?.env?.region }
         },config);
+      }
+}
+
+class RedisSecondaryStage extends Stage {
+    constructor(scope: Construct, id: string, primaryRegion: string, props?: StageProps) {
+        super(scope, id, props);
+    
+        const redisSecondary = new RedisSecondaryStack(this, 'RedisSecondaryStack', {
+            env: { account: props?.env?.account, region: props?.env?.region }
+        },primaryRegion);
       }
 }

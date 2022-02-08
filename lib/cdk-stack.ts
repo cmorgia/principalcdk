@@ -1,7 +1,7 @@
 import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { AutoScalingGroup, Signals } from 'aws-cdk-lib/aws-autoscaling';
 import { OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront';
-import { AmazonLinuxImage, CloudFormationInit, InitCommand, InitConfig, InitFile, InitGroup, InitPackage, InitService, InstanceClass, InstanceSize, InstanceType, Peer, Port, SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { AmazonLinuxImage, CloudFormationInit, InitCommand, InitConfig, InitFile, InitGroup, InitPackage, InitService, InstanceClass, InstanceSize, InstanceType, IVpc, Peer, Port, SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { CfnGlobalReplicationGroup, CfnReplicationGroup, CfnSubnetGroup } from 'aws-cdk-lib/aws-elasticache';
 import { ApplicationListenerRule, ApplicationLoadBalancer, ApplicationProtocol, ApplicationTargetGroup, ListenerAction, ListenerCondition, TargetType } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -17,7 +17,8 @@ import { ReplicatedBucket } from './replicated';
 export class AppStack extends Stack {
   public bucket: Bucket;
   public alb: ApplicationLoadBalancer;
-  private redisGlobalPrefix:{[key:string]:string}={
+  
+  private static redisGlobalPrefix:{[key:string]:string}={
     "us-east-2":"fpkhr",
     "us-east-1":"ldgnf",
     "us-west-1":"virxk",
@@ -51,6 +52,7 @@ export class AppStack extends Stack {
     // default AZs = 3, public+private subnet per AZ
     const vpc = new Vpc(this, 'vpc', {
       cidr: config.cidr,
+      vpcName: `${config.primary ? "primary" : "secondary"}VPC`
     });
 
     const alb = new ApplicationLoadBalancer(this, 'alb', {
@@ -159,7 +161,17 @@ export class AppStack extends Stack {
 
     bucket.grantRead(oai);
 
-    //this.setupRedis(vpc, config.primary, config.secondaryRegion);
+    const result = this.setupPreRedis(vpc);
+    
+    new StringParameter(this, `redisSecGroupId-${Stack.of(this).region}`, {
+      parameterName: `redisSecGroupId-${Stack.of(this).region}`,
+      stringValue: result.securityGroup.securityGroupId,
+    });
+
+    if (config.primary) {
+      AppStack.setupRedis(this,result.securityGroup.securityGroupId, true, config.primaryRegion, config.secondaryRegion, result.subnetGroup);
+    }
+
     this.setupAurora(vpc, config.primary, config.secondaryRegion);
 
     new StringParameter(this, `lb-${Stack.of(this).region}`, {
@@ -181,7 +193,7 @@ export class AppStack extends Stack {
     this.bucket = bucket;
   }
 
-  private setupRedis(vpc: Vpc, isPrimary: boolean, secondaryRegion: string) {
+  protected setupPreRedis(vpc: IVpc) {
     const secGroup = new SecurityGroup(this, 'redisSecGroup', { vpc: vpc });
     secGroup.connections.allowFrom(Peer.ipv4(vpc.vpcCidrBlock), Port.tcp(6379));
 
@@ -191,28 +203,33 @@ export class AppStack extends Stack {
       description: 'SubnetGroup for Redis Cluster'
     });
 
-    const redisReplGroup = new CfnReplicationGroup(this, 'redis', {
-      replicationGroupId: `redis-${Stack.of(this).account}-${Stack.of(this).region}`,
+    return {"securityGroup": secGroup, "subnetGroup":subnetGroup };
+  }
+
+  public static setupRedis(scope:Construct, secGroupId: string, isPrimary: boolean, primaryRegion: string, secondaryRegion?: string, subnetGroup?: CfnSubnetGroup) {
+    const redisReplGroup = new CfnReplicationGroup(scope, 'redis', {
+      replicationGroupId: `redis-${Stack.of(scope).account}-${Stack.of(scope).region}`,
       replicationGroupDescription: 'Redis Replication Group',
       cacheNodeType: 'cache.m5.large',
-      cacheSubnetGroupName: subnetGroup.cacheSubnetGroupName,
+      cacheSubnetGroupName: isPrimary ? subnetGroup?.cacheSubnetGroupName :`redisSubnetGroup-${Stack.of(scope).account}`,
       multiAzEnabled: true,
       numCacheClusters: 2,
       automaticFailoverEnabled: true,
       engine: 'redis',
       port: 6379,
-      securityGroupIds: [secGroup.securityGroupId],
+      securityGroupIds: [secGroupId],
       snapshotRetentionLimit: 7,
-      globalReplicationGroupId: `${this.redisGlobalPrefix[Stack.of(this).region]}-globalredis`
+      globalReplicationGroupId: isPrimary ? undefined : `${this.redisGlobalPrefix[primaryRegion]}-globalredis`
     });
-    redisReplGroup._addResourceDependency(subnetGroup);
-
-
+    
     if (isPrimary) {
-      const globalReplicationGroup = new CfnGlobalReplicationGroup(this, 'globalRedis', {
+      if (subnetGroup) {
+        redisReplGroup.addDependsOn(subnetGroup);
+      } 
+      const globalReplicationGroup = new CfnGlobalReplicationGroup(scope, 'globalRedis', {
         globalReplicationGroupIdSuffix: 'globalredis',
         members: [
-          { replicationGroupId: redisReplGroup.replicationGroupId, replicationGroupRegion: Stack.of(this).region, role: 'PRIMARY' }
+          { replicationGroupId: redisReplGroup.replicationGroupId, replicationGroupRegion: Stack.of(scope).region, role: 'PRIMARY' }
         ],
         regionalConfigurations: [{ replicationGroupId: 'secondary', replicationGroupRegion: secondaryRegion }]
       });
@@ -270,5 +287,14 @@ export class AppStack extends Stack {
         stringValue: secondary.dbSubnetGroup.dbSubnetGroupName || "",
       });
     }
+  }
+}
+
+export class RedisSecondaryStack extends Stack {
+  constructor(scope: Construct, id: string, props: StackProps, primaryRegion: string) {
+    super(scope, id, props);
+
+    const redisSecGroupId = new SSMParameterReader(this,'redisSecGroupId',{parameterName: `redisSecGroupId-${props.env?.region}`, region: props.env?.region || ""}).getParameterValue();
+    AppStack.setupRedis(this,redisSecGroupId, false, primaryRegion);
   }
 }
