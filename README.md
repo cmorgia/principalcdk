@@ -46,3 +46,28 @@ This can easily be done by executing the script:
 
 Just execute the script `<path to workspace>/scripts/urls.sh` to compute the static (S3 served) and dynamic (ALB served) URL.
 Navigate to the respective URLs to validate.
+
+## Technical aspects
+
+For cross-region cross-account deployments, the typical CDK pipeline needs to be adapted to work around specific behavior of resources.
+For example, to properly configure a CloudFront distribution with origin groups and origins, the stack needs to have access to resources in both regions.
+Therefore, you first need to:
+
+* have stages to deploy them in the selected regions
+* put in place a mechanism to share relevant data across regions
+* a surrounding stage that creates the Distribution after the dependencies are all set up
+
+This is implemented in the `pipeline.ts` file creating:
+
+* a primary stage to deploy in the primary region and create parameters to share data (i.e. ALB DNS name)
+* a secondary stage to deploy in the DR region and create parameters to share data (i.e. ALB DNS name)
+* a third stage to read the parameters values, use them to look up the relevant resources and then configure the CloudFront distribution
+
+For the last step, I created a class to dynamically read SSM Parameters in cross-region fashion (`lib/reader.ts`), using an AWS Custom Resource construct.
+
+The complexity of the pipeline comes also by the fact that certain global resources requires the primary to be already created, others the secondary.
+
+This is conflicting case of the Aurora Global database and the Redis Global Datastore.
+In cases like this, the best way to proceed is to perform a dependency analysis, highlight the hard dependencies across stages, isolate them into individual stacks and sequence the stages deployment according to the linearized dependency graph.
+
+This is the reason why the pipeline seems to have multiple stages across the primary and secondary region, going back and forth.
