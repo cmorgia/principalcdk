@@ -44,5 +44,5 @@ This can easily be done by executing the script:
 
 ## Test the solution
 
-Just execute the script `<path to workspace>/scripts/deploy.sh` to compute the static (S3 served) and dynamic (ALB served) URL.
+Just execute the script `<path to workspace>/scripts/urls.sh` to compute the static (S3 served) and dynamic (ALB served) URL.
 Navigate to the respective URLs to validate.
