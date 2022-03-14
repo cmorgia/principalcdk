@@ -9,7 +9,7 @@ import { AuroraPostgresEngineVersion, DatabaseClusterEngine, ParameterGroup } fr
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
-import { GolbalAuroraRDSMaster as GlobalAuroraMaster, GolbalAuroraRDSSlaveInfra as GlobalAuroraSlave } from 'cdk-aurora-globaldatabase';
+import { GlobalAuroraRDSMaster, GlobalAuroraRDSSlaveInfra } from 'cdk-aurora-globaldatabase';
 import { Construct } from 'constructs';
 import { Config } from './config';
 import { SSMParameterReader } from './reader';
@@ -248,7 +248,7 @@ export class AppStack extends Stack {
         version: AuroraPostgresEngineVersion.VER_11_7
       });
 
-      const primary = new GlobalAuroraMaster(this, 'primaryAurora', {
+      const primary = new GlobalAuroraRDSMaster(this, 'primaryAurora', {
         vpc: vpc,
         engineVersion: v17,
         rdsPassword: '1qidhqwwu3',
@@ -281,7 +281,7 @@ export class AppStack extends Stack {
         dbSubnetGroupName: dbSubnetName
       });
     } else {
-      const secondary = new GlobalAuroraSlave(this, 'secondaryAurora', { vpc: vpc });
+      const secondary = new GlobalAuroraRDSSlaveInfra(this, 'secondaryAurora', { vpc: vpc });
       new StringParameter(this, `aurora-secondary-subnet-${Stack.of(this).region}`, {
         parameterName: `aurora-secondary-subnet-${Stack.of(this).region}`,
         stringValue: secondary.dbSubnetGroup.dbSubnetGroupName || "",
