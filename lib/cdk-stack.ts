@@ -181,7 +181,7 @@ export class AppStack extends Stack {
 
     new StringParameter(this, `oai-${Stack.of(this).region}`, {
       parameterName: `oai-${Stack.of(this).region}`,
-      stringValue: oai.originAccessIdentityName,
+      stringValue: oai.originAccessIdentityId,
     });
 
     new StringParameter(this, `header-${Stack.of(this).region}`, {
@@ -245,7 +245,7 @@ export class AppStack extends Stack {
       }).getParameterValue();
 
       const v17 = DatabaseClusterEngine.auroraPostgres({
-        version: AuroraPostgresEngineVersion.VER_11_7
+        version: AuroraPostgresEngineVersion.VER_14_3
       });
 
       const primary = new GlobalAuroraRDSMaster(this, 'primaryAurora', {

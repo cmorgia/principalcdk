@@ -23,8 +23,8 @@ export class ReplicaStack extends cdk.Stack {
     const primaryBucket = Bucket.fromBucketAttributes(this, 'primaryBucket', { bucketName: `static-files-${Stack.of(this).account}-${config.primaryRegion}`, region: config.primaryRegion });
     const secondaryBucket = Bucket.fromBucketAttributes(this, 'secondaryBucket', { bucketName: `static-files-${Stack.of(this).account}-${config.secondaryRegion}`, region: config.secondaryRegion });
 
-    const primaryOAI = OriginAccessIdentity.fromOriginAccessIdentityName(this,'primaryOAI',primaryOAIName);
-    const secondaryOAI = OriginAccessIdentity.fromOriginAccessIdentityName(this,'secondaryOAI',secondaryOAIName);
+    const primaryOAI = OriginAccessIdentity.fromOriginAccessIdentityId(this,'primaryOAI',primaryOAIName);
+    const secondaryOAI = OriginAccessIdentity.fromOriginAccessIdentityId(this,'secondaryOAI',secondaryOAIName);
 
     const distrib = new Distribution(this, 'distrib', {
       defaultBehavior: { 
