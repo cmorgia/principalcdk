@@ -8,12 +8,16 @@ export interface EnvConfig {
     readonly secondaryCidr: string;
     readonly primaryRegion: string;
     readonly secondaryRegion: string;
+    readonly enableRedis: boolean;
+    readonly enableAurora: boolean;
 };
 export interface Config {
     readonly primary: boolean;
     readonly cidr:string;
     readonly primaryRegion: string;
     readonly secondaryRegion: string;
+    readonly enableRedis: boolean;
+    readonly enableAurora: boolean;
 };
 
 export interface ReplicaConfig {

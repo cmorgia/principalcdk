@@ -37,6 +37,8 @@ function getConfig(env?:string) {
     secondaryCidr: ensureString(unparsedEnv, 'secondaryCidr'),
     primaryRegion: ensureString(unparsedEnv, 'primaryRegion'),
     secondaryRegion: ensureString(unparsedEnv, 'secondaryRegion'),
+    enableRedis: ensureString(unparsedEnv, 'enableRedis')=="true",
+    enableAurora: ensureString(unparsedEnv, 'enableAurora')=="true"
   };
 
   return buildConfig;
@@ -55,6 +57,8 @@ function getCicdConfig(env?:string) {
     account: ensureString(unparsedEnv, 'account'),
     primaryRegion: ensureString(unparsedEnv, 'primaryRegion'),
     secondaryRegion: ensureString(unparsedEnv, 'secondaryRegion'),
+    enableRedis: ensureString(unparsedEnv, 'enableRedis'),
+    enableAurora: ensureString(unparsedEnv, 'enableAurora')
   };
 
   return buildConfig;
@@ -85,14 +89,18 @@ if (_config!='cicd') {
     primary: true,
     cidr: config.primaryCidr,
     primaryRegion: config.primaryRegion,
-    secondaryRegion: config.secondaryRegion
+    secondaryRegion: config.secondaryRegion,
+    enableRedis: config.enableRedis,
+    enableAurora: config.enableAurora
   };
   
   const secondaryConfig:Config = {
     primary: false,
     cidr: config.secondaryCidr,
     primaryRegion: config.secondaryRegion,
-    secondaryRegion: config.primaryRegion
+    secondaryRegion: config.primaryRegion,
+    enableRedis: config.enableRedis,
+    enableAurora: config.enableAurora
   };
 
   const primary = new AppStack(app, 'PrimaryStack', {
@@ -120,7 +128,9 @@ if (_config!='cicd') {
     primary: true,
     cidr: config.primaryCidr,
     primaryRegion: config.primaryRegion,
-    secondaryRegion: config.secondaryRegion
+    secondaryRegion: config.secondaryRegion,
+    enableRedis: config.enableRedis=="true",
+    enableAurora: config.enableAurora=="true"
   };
 
   new PipelineStack(app, 'PipelineStack', {

@@ -39,8 +39,10 @@
       "aws-cn"
     ],
     "common": {
-      "primaryRegion": "eu-west-1",
-      "secondaryRegion": "<your secondary region>"
+      "primaryRegion": "<your primary region>",
+      "secondaryRegion": "<your secondary region>",
+      "enableRedis": "false",
+      "enableAurora": "false"
     },
     "cicd": {
       "account": "<cicd account id>",

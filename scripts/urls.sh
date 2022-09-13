@@ -1,6 +1,7 @@
 #!/bin/sh
 
-export ARNS=$(aws cloudfront list-distributions --region eu-west-1 --query "DistributionList.Items[].ARN" --output text)
+export PRIMARY_REGION=$(jq -r .context.common.primaryRegion <cdk.json)
+export ARNS=$(aws cloudfront list-distributions --region $PRIMARY_REGION --query "DistributionList.Items[].ARN" --output text)
 for arn in $ARNS ; do 
     if [ $(aws cloudfront list-tags-for-resource --resource $arn --query "Tags.Items[?Key=='DistributionName'].Value" --output text) == "TestDistribution" ] ; then
         DISTRIB=$(echo $arn | cut -d '/' -f 2)

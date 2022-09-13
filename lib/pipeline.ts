@@ -3,6 +3,7 @@ import { Vpc } from "aws-cdk-lib/aws-ec2";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { AddStageOpts, CodePipeline, CodePipelineSource, ManualApprovalStep, ShellStep } from "aws-cdk-lib/pipelines";
 import { Construct } from "constructs";
+import { env } from "process";
 import { AppStack, RedisSecondaryStack } from "./cdk-stack";
 import { Config, EnvConfig, ReplicaConfig } from "./config";
 import { ReplicaStack } from "./replica-stack";
@@ -40,7 +41,9 @@ export class PipelineStack extends Stack {
                 primary: false,
                 cidr: envConfig.secondaryCidr,
                 primaryRegion: envConfig.secondaryRegion,
-                secondaryRegion: envConfig.primaryRegion
+                secondaryRegion: envConfig.primaryRegion,
+                enableRedis: envConfig.enableRedis,
+                enableAurora: envConfig.enableAurora
             };
             pipeline.addStage(new ApplicationStage(this,`${envName}Secondary`,secondaryConfig, { 
                 env: { account: envConfig.account, region: envConfig.secondaryRegion }
@@ -50,15 +53,19 @@ export class PipelineStack extends Stack {
                 primary: true,
                 cidr: envConfig.primaryCidr,
                 primaryRegion: envConfig.primaryRegion,
-                secondaryRegion: envConfig.secondaryRegion
+                secondaryRegion: envConfig.secondaryRegion,
+                enableRedis: envConfig.enableRedis,
+                enableAurora: envConfig.enableAurora
             };
             pipeline.addStage(new ApplicationStage(this,`${envName}Primary`,primaryConfig, { 
                 env: { account: envConfig.account, region: envConfig.primaryRegion }
             }));
     
-            pipeline.addStage(new RedisSecondaryStage(this,`${envName}RedisSecondary`, envConfig.primaryRegion, { 
-                env: { account: envConfig.account, region: envConfig.secondaryRegion }
-            }));
+            if (envConfig.enableRedis) {
+                pipeline.addStage(new RedisSecondaryStage(this,`${envName}RedisSecondary`, envConfig.primaryRegion, { 
+                    env: { account: envConfig.account, region: envConfig.secondaryRegion }
+                }));
+            }
 
             const replicaConfig:ReplicaConfig = {
                 primaryRegion: secondaryConfig.primaryRegion,

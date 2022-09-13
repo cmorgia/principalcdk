@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { Stack, Tags } from 'aws-cdk-lib';
+import { CfnOutput, Stack, Tags } from 'aws-cdk-lib';
 import { Distribution, OriginAccessIdentity, OriginProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { HttpOrigin, OriginGroup, S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
@@ -50,6 +50,14 @@ export class ReplicaStack extends cdk.Stack {
     });
 
     Tags.of(distrib).add('DistributionName','TestDistribution');
+
+    new CfnOutput(this,'staticUrl',{
+      value: `https://${distrib.distributionDomainName}/static/demo.html`
+    });
+
+    new CfnOutput(this,'dynamicUrl',{
+      value: `https://${distrib.distributionDomainName}/demo.html`
+    });
   }
 
 }
