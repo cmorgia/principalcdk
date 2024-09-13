@@ -15,7 +15,7 @@ export class PipelineStack extends Stack {
                 input: CodePipelineSource.connection('cmorgia/principalcdk','main',{
                     connectionArn: `arn:aws:codeconnections:${Stack.of(this).region}:${Stack.of(this).account}:connection/a595bf83-75f7-4404-8d11-fea6b9d53e2d`
                 }),
-                installCommands: [ 'npm i -g npm' ],
+                installCommands: [ 'npm i -g npm', 'npm update' ],
                 commands: [
                     'npm ci',
                     './scripts/fix.sh',
