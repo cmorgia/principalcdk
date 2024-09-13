@@ -1,9 +1,6 @@
 import { CfnOutput, Stack, StackProps, Stage, StageProps } from "aws-cdk-lib";
-import { Vpc } from "aws-cdk-lib/aws-ec2";
-import { Bucket } from "aws-cdk-lib/aws-s3";
 import { AddStageOpts, CodePipeline, CodePipelineSource, ManualApprovalStep, ShellStep } from "aws-cdk-lib/pipelines";
 import { Construct } from "constructs";
-import { env } from "process";
 import { AppStack, RedisSecondaryStack } from "./cdk-stack";
 import { Config, EnvConfig, ReplicaConfig } from "./config";
 import { ReplicaStack } from "./replica-stack";
@@ -12,16 +9,10 @@ export class PipelineStack extends Stack {
     constructor(scope: Construct, id: string, props: StackProps, envConfigs: { [env: string]: EnvConfig }) {
         super(scope, id, props);
 
-        const packageObjectName = 'package.zip';
-
-        const sourceBucket = new Bucket(this, 'sourceBucket', {
-            versioned: true, // a Bucket used as a source in CodePipeline must be versioned
-            bucketName: `code-artifacts-${props.env?.region}-${props.env?.account}`
-        });
         const pipeline = new CodePipeline(this,'mainPipeline',{
             crossAccountKeys: true,
             synth: new ShellStep('Synth',{
-                input: CodePipelineSource.s3(sourceBucket,packageObjectName),
+                input: CodePipelineSource.gitHub('cmorgia/principalcdk','main'),
                 installCommands: [ 'npm i -g npm' ],
                 commands: [
                     'npm ci',
@@ -79,11 +70,6 @@ export class PipelineStack extends Stack {
             pipeline.addStage(new ReplicationStage(this,`${envName}Replica`,replicaConfig, { 
                 env: { account: envConfig.account, region: envConfig.primaryRegion }
             }),stageOpts);
-        });
-        
-        new CfnOutput(this,'packageTarget',{
-            description: 'S3 URL pipeline source object',
-            value: sourceBucket.s3UrlForObject(packageObjectName)
         });
     }
 }
