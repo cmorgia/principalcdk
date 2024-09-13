@@ -39,30 +39,30 @@
       "aws-cn"
     ],
     "common": {
-      "primaryRegion": "<your primary region>",
-      "secondaryRegion": "<your secondary region>",
+      "primaryRegion": "eu-central-1",
+      "secondaryRegion": "eu-west-1",
       "enableRedis": "false",
       "enableAurora": "false"
     },
     "cicd": {
-      "account": "<cicd account id>",
-      "profile": "<cicd profile name>"
+      "account": "492464835064",
+      "profile": "cicd"
     },
     "dev": {
-      "account": "<dev account id>",
-      "profile": "<dev profile name>",
+      "account": "549092826780",
+      "profile": "dev",
       "primaryCidr": "10.0.0.0/24",
       "secondaryCidr": "10.1.0.0/24"
     },
     "test": {
-      "account": "<test account id>",
-      "profile": "<test profile name>",
+      "account": "552209702686",
+      "profile": "test",
       "primaryCidr": "10.2.0.0/24",
       "secondaryCidr": "10.3.0.0/24"
     },
     "prod": {
-      "account": "<prod account id>",
-      "profile": "<prod profile name>",
+      "account": "981410207842",
+      "profile": "prod",
       "primaryCidr": "10.4.0.0/24",
       "secondaryCidr": "10.5.0.0/24"
     }
