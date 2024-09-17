@@ -11,6 +11,7 @@ export class PipelineStack extends Stack {
 
         const pipeline = new CodePipeline(this,'mainPipeline',{
             crossAccountKeys: true,
+            useChangeSets: false,
             synth: new ShellStep('Synth',{
                 input: CodePipelineSource.connection('cmorgia/principalcdk','main',{
                     connectionArn: `arn:aws:codeconnections:${Stack.of(this).region}:${Stack.of(this).account}:connection/a595bf83-75f7-4404-8d11-fea6b9d53e2d`

@@ -41,7 +41,7 @@
     "common": {
       "primaryRegion": "eu-central-1",
       "secondaryRegion": "eu-west-1",
-      "enableRedis": "false",
+      "enableRedis": "true",
       "enableAurora": "false"
     },
     "cicd": {
