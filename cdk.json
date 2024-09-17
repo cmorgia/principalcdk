@@ -42,7 +42,7 @@
       "primaryRegion": "eu-central-1",
       "secondaryRegion": "eu-west-1",
       "enableRedis": "true",
-      "enableAurora": "false"
+      "enableAurora": "true"
     },
     "cicd": {
       "account": "492464835064",
