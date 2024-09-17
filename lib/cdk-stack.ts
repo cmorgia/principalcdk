@@ -196,7 +196,7 @@ export class AppStack extends Stack {
     }
 
     if (config.enableAurora) {
-      this.setupAurora(vpc, config.primary, config.secondaryRegion);
+      this.setupAurora(vpc, config.primary, config.primaryRegion);
     }
 
     new StringParameter(this, `lb-${Stack.of(this).region}`, {
@@ -262,11 +262,11 @@ export class AppStack extends Stack {
     }
   }
 
-  private setupAurora(vpc: Vpc, isPrimary: boolean, secondaryRegion: string) {
+  private setupAurora(vpc: Vpc, isPrimary: boolean, region: string) {
     if (isPrimary) {
       const dbSubnetName = new SSMParameterReader(this, 'dbSubnetName', {
-        parameterName: `aurora-secondary-subnet-${secondaryRegion}`,
-        region: secondaryRegion
+        parameterName: `aurora-secondary-subnet-${region}`,
+        region: region
       }).getParameterValue();
 
       const v17 = DatabaseClusterEngine.auroraPostgres({
@@ -304,7 +304,7 @@ export class AppStack extends Stack {
 
       const sg = new SecurityGroup(this, 'auroraRegionalSG', { vpc: vpc });
       primary.addRegionalCluster(this, 'auroraRegional', {
-        region: secondaryRegion,
+        region: region,
         dbSubnetGroupName: dbSubnetName,
         securityGroupId: sg.securityGroupId,
         dbParameterGroup: (pg.node.defaultChild as CfnDBParameterGroup).ref
