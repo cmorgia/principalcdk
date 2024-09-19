@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CfnOutput, Stack, Tags } from 'aws-cdk-lib';
 import { Distribution, OriginAccessIdentity, OriginProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
-import { HttpOrigin, OriginGroup, S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import { HttpOrigin, OriginGroup, S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ReplicaConfig } from './config';
@@ -42,8 +42,8 @@ export class ReplicaStack extends cdk.Stack {
       additionalBehaviors: {
         'static/*': { 
           origin: new OriginGroup({
-            primaryOrigin: new S3Origin(primaryBucket, { originAccessIdentity: primaryOAI }),
-            fallbackOrigin: new S3Origin(secondaryBucket, { originAccessIdentity: secondaryOAI })
+            primaryOrigin: S3BucketOrigin.withOriginAccessIdentity(primaryBucket, { originAccessIdentity: primaryOAI }),
+            fallbackOrigin: S3BucketOrigin.withOriginAccessIdentity(secondaryBucket, { originAccessIdentity: secondaryOAI })
           })
         }
       }

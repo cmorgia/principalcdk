@@ -1,7 +1,7 @@
 import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { AutoScalingGroup, Signals } from 'aws-cdk-lib/aws-autoscaling';
 import { OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront';
-import { AmazonLinuxImage, CloudFormationInit, InitCommand, InitConfig, InitFile, InitGroup, InitPackage, InitService, InstanceClass, InstanceSize, InstanceType, InterfaceVpcEndpointAwsService, IVpc, Peer, Port, SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { AmazonLinuxImage, CloudFormationInit, InitCommand, InitConfig, InitFile, InitGroup, InitPackage, InitService, InstanceClass, InstanceSize, InstanceType, InterfaceVpcEndpointAwsService, IpAddresses, IVpc, Peer, Port, SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { CfnGlobalReplicationGroup, CfnReplicationGroup, CfnSubnetGroup } from 'aws-cdk-lib/aws-elasticache';
 import { ApplicationListenerRule, ApplicationLoadBalancer, ApplicationProtocol, ApplicationTargetGroup, ListenerAction, ListenerCondition, TargetType } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -55,7 +55,7 @@ export class AppStack extends Stack {
 
     // default AZs = 3, public+private subnet per AZ
     const vpc = new Vpc(this, 'vpc', {
-      cidr: config.cidr,
+      ipAddresses: IpAddresses.cidr(config.cidr),
       vpcName: `${config.primary ? "primary" : "secondary"}VPC`
     });
 
@@ -196,7 +196,7 @@ export class AppStack extends Stack {
     }
 
     if (config.enableAurora) {
-      this.setupAurora(vpc, config.primary, config.primaryRegion);
+      this.setupAurora(vpc, config.primary, config.secondaryRegion);
     }
 
     new StringParameter(this, `lb-${Stack.of(this).region}`, {
@@ -249,7 +249,7 @@ export class AppStack extends Stack {
 
     if (isPrimary) {
       if (subnetGroup) {
-        redisReplGroup.addDependsOn(subnetGroup);
+        redisReplGroup.addDependency(subnetGroup);
       }
       const globalReplicationGroup = new CfnGlobalReplicationGroup(scope, 'globalRedis', {
         globalReplicationGroupIdSuffix: 'globalredis',
@@ -258,7 +258,7 @@ export class AppStack extends Stack {
         ],
         regionalConfigurations: [{ replicationGroupId: 'secondary', replicationGroupRegion: secondaryRegion }]
       });
-      globalReplicationGroup.addDependsOn(redisReplGroup);
+      globalReplicationGroup.addDependency(redisReplGroup);
     }
   }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import 'source-map-support/register';
-import { AppStack } from '../lib/cdk-stack';
+import { AppStack, RedisSecondaryStack } from '../lib/cdk-stack';
 import { Config, EnvConfig, ReplicaConfig } from '../lib/config';
 import { PipelineStack } from '../lib/pipeline';
 import { ReplicaStack } from '../lib/replica-stack';
@@ -108,16 +108,20 @@ if (_config!='cicd') {
   },primaryConfig);
   
   const secondary = new AppStack(app, 'FailoverStack', {
-    env: { account: config.account, region: secondaryConfig.secondaryRegion }
+    env: { account: config.account, region: primaryConfig.secondaryRegion }
   },secondaryConfig);
   
+  const redisSecondary = new RedisSecondaryStack(app, 'RedisSecondaryStack', {
+    env: { account: config.account, region: primaryConfig.secondaryRegion }
+  },primaryConfig.primaryRegion);
+
   const replicaConfig:ReplicaConfig = {
     primaryRegion: secondaryConfig.primaryRegion,
     secondaryRegion: secondaryConfig.secondaryRegion
   };
   
   const replication = new ReplicaStack(app, 'ReplicaStack', {
-    env: { account: config.account, region: primaryConfig.secondaryRegion }
+    env: { account: config.account, region: primaryConfig.primaryRegion }
   }, replicaConfig);
 } else {
   // in case of cicd, a pipeline stack is created and the configured envs
