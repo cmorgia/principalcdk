@@ -46,23 +46,19 @@
       "enableAurora": "true"
     },
     "cicd": {
-      "account": "492464835064",
       "profile": "cicd"
     },
     "dev": {
-      "account": "549092826780",
       "profile": "dev",
       "primaryCidr": "10.0.0.0/24",
       "secondaryCidr": "10.1.0.0/24"
     },
     "test": {
-      "account": "552209702686",
       "profile": "test",
       "primaryCidr": "10.2.0.0/24",
       "secondaryCidr": "10.3.0.0/24"
     },
     "prod": {
-      "account": "981410207842",
       "profile": "prod",
       "primaryCidr": "10.4.0.0/24",
       "secondaryCidr": "10.5.0.0/24"

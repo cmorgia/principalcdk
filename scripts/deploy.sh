@@ -3,9 +3,9 @@
 export PARENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && cd .. && pwd )"
 cd $PARENT_DIR
 
-export CICD_ID=$(jq -r .context.cicd.account cdk.json)
 # change below with your profile name
 export AWS_PROFILE=$(jq -r .context.cicd.profile <cdk.json)
+export CICD_ID=$(aws --profile $AWS_PROFILE sts get-caller-identity | jq -r .Account)
 export AWS_DEFAULT_REGION=$(jq -r .context.common.primaryRegion cdk.json)
 
 export S3OBJURL=$(aws cloudformation describe-stacks --stack-name PipelineStack --query "Stacks[0].Outputs[?OutputKey=='packageTarget'].OutputValue" --output text)
