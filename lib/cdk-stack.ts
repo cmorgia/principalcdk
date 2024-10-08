@@ -12,7 +12,7 @@ import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { GlobalAuroraRDSMaster, GlobalAuroraRDSSlaveInfra } from 'cdk-aurora-globaldatabase';
 import { Construct } from 'constructs';
 import { Config } from './config';
-import { SSMParameterReader } from './reader';
+import { SSMParameterReader } from 'xregion-ssm-parameter-reader';
 import { ReplicatedBucket } from './replicated';
 export class AppStack extends Stack {
   public bucket: Bucket;
@@ -267,7 +267,7 @@ export class AppStack extends Stack {
       const dbSubnetName = new SSMParameterReader(this, 'dbSubnetName', {
         parameterName: `aurora-secondary-subnet-${region}`,
         region: region
-      }).getParameterValue();
+      }).retrieveParameterValue();
 
       const v17 = DatabaseClusterEngine.auroraPostgres({
         version: AuroraPostgresEngineVersion.VER_14_3
@@ -323,7 +323,7 @@ export class RedisSecondaryStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps, primaryRegion: string) {
     super(scope, id, props);
 
-    const redisSecGroupId = new SSMParameterReader(this, 'redisSecGroupId', { parameterName: `redisSecGroupId-${props.env?.region}`, region: props.env?.region || "" }).getParameterValue();
+    const redisSecGroupId = new SSMParameterReader(this, 'redisSecGroupId', { parameterName: `redisSecGroupId-${props.env?.region}`, region: props.env?.region || "" }).retrieveParameterValue();
     AppStack.setupRedis(this, redisSecGroupId, false, primaryRegion);
   }
 }

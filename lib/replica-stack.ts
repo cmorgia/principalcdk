@@ -5,20 +5,20 @@ import { HttpOrigin, OriginGroup, S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfr
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ReplicaConfig } from './config';
-import { SSMParameterReader } from './reader';
+import { SSMParameterReader } from 'xregion-ssm-parameter-reader';
 
 export class ReplicaStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: cdk.StackProps, config:ReplicaConfig) {
     super(scope, id, props);
     
-    const primaryLBDNS = new SSMParameterReader(this,'primaryLBDNS',{parameterName: `lb-${config.primaryRegion}`, region: config.primaryRegion}).getParameterValue();
-    const secondaryLBDNS = new SSMParameterReader(this,'secondaryLBDNS',{parameterName: `lb-${config.secondaryRegion}`, region: config.secondaryRegion}).getParameterValue();
+    const primaryLBDNS = new SSMParameterReader(this,'primaryLBDNS',{parameterName: `lb-${config.primaryRegion}`, region: config.primaryRegion}).retrieveParameterValue();
+    const secondaryLBDNS = new SSMParameterReader(this,'secondaryLBDNS',{parameterName: `lb-${config.secondaryRegion}`, region: config.secondaryRegion}).retrieveParameterValue();
 
-    const primaryOAIName = new SSMParameterReader(this,'primaryOAIName',{parameterName: `oai-${config.primaryRegion}`, region: config.primaryRegion}).getParameterValue();
-    const secondaryOAIName = new SSMParameterReader(this,'secondaryOAIName',{parameterName: `oai-${config.secondaryRegion}`, region: config.secondaryRegion}).getParameterValue();
+    const primaryOAIName = new SSMParameterReader(this,'primaryOAIName',{parameterName: `oai-${config.primaryRegion}`, region: config.primaryRegion}).retrieveParameterValue();
+    const secondaryOAIName = new SSMParameterReader(this,'secondaryOAIName',{parameterName: `oai-${config.secondaryRegion}`, region: config.secondaryRegion}).retrieveParameterValue();
 
-    const primarySecretHeader = new SSMParameterReader(this,'primarySecretHeader',{parameterName: `header-${config.primaryRegion}`, region: config.primaryRegion}).getParameterValue();
-    const secondarySecretHeader = new SSMParameterReader(this,'secondarySecretHeader',{parameterName: `header-${config.secondaryRegion}`, region: config.secondaryRegion}).getParameterValue();
+    const primarySecretHeader = new SSMParameterReader(this,'primarySecretHeader',{parameterName: `header-${config.primaryRegion}`, region: config.primaryRegion}).retrieveParameterValue();
+    const secondarySecretHeader = new SSMParameterReader(this,'secondarySecretHeader',{parameterName: `header-${config.secondaryRegion}`, region: config.secondaryRegion}).retrieveParameterValue();
 
     const primaryBucket = Bucket.fromBucketAttributes(this, 'primaryBucket', { bucketName: `static-files-${Stack.of(this).account}-${config.primaryRegion}`, region: config.primaryRegion });
     const secondaryBucket = Bucket.fromBucketAttributes(this, 'secondaryBucket', { bucketName: `static-files-${Stack.of(this).account}-${config.secondaryRegion}`, region: config.secondaryRegion });
