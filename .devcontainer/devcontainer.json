@@ -6,10 +6,16 @@
 	"image": "mcr.microsoft.com/devcontainers/base:jammy",
 	"features": {
 		"ghcr.io/devcontainers/features/aws-cli:1": {},
-		"ghcr.io/devcontainers-extra/features/aws-cdk:2": {},
-		"ghcr.io/joshuanianji/devcontainer-features/aws-cli-persistence:1": {}
+		"ghcr.io/devcontainers-extra/features/aws-cdk:2": {}
+	},
+	"mounts": [
+		"source=${localEnv:HOME}/.aws,target=/.aws,type=bind,readonly"
+	],
+	"containerEnv": {
+		"AWS_CONFIG_FILE": "/.aws/config",
+		"AWS_SHARED_CREDENTIALS_FILE": "/.aws/credentials"
 	}
-
+	
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 
