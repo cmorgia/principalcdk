@@ -14,6 +14,18 @@
 	"containerEnv": {
 		"AWS_CONFIG_FILE": "/.aws/config",
 		"AWS_SHARED_CREDENTIALS_FILE": "/.aws/credentials"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"eamodio.gitlens",
+				"amazonwebservices.amazon-q-vscode",
+				"github.vscode-github-actions",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-python.debugpy"
+			]
+		}
 	}
 	
 	// Features to add to the dev container. More info: https://containers.dev/features.
