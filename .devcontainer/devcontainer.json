@@ -9,12 +9,12 @@
 		"ghcr.io/devcontainers-extra/features/aws-cdk:2": {}
 	},
 	"mounts": [
-		"source=${localEnv:HOME}/.aws,target=/.aws,type=bind,readonly"
+		"source=${localEnv:HOME}/.aws,target=/home/vscode/.aws,type=bind,readonly"
 	],
-	"containerEnv": {
-		"AWS_CONFIG_FILE": "/.aws/config",
-		"AWS_SHARED_CREDENTIALS_FILE": "/.aws/credentials"
-	},
+	//"containerEnv": {
+	//	"AWS_CONFIG_FILE": "/home/vscode/.aws/config",
+	//	"AWS_SHARED_CREDENTIALS_FILE": "/home/vscode/.aws/credentials"
+	//},
 	"customizations": {
 		"vscode": {
 			"extensions": [
